@@ -1,5 +1,6 @@
-"""One-shot bootstrap: WAI Illustrious ckpt + Bai Ning Bing e5 LoRA."""
+"""One-shot bootstrap: WAI Illustrious ckpt + Bai Ning Bing e5 LoRA (background)."""
 import os
+import threading
 import urllib.request
 from pathlib import Path
 
@@ -11,6 +12,7 @@ LORA = COMFY / "models" / "loras" / "bai_ning_bing_e5.safetensors"
 
 DEFAULT_CKPT = "https://huggingface.co/SiE69/Illoustrious_Checkpoint_Collection/resolve/main/waiNSFWIllustrious_v150.safetensors"
 DEFAULT_LORA = "https://orchestration-new.civitai.com/v2/consumer/blobs/Y8152CCDC3RQ724X6ZSJ143N90.safetensors?sig=CfDJ8EVzXboigx9EiFXpbVmCZiby9XoJJDxF9pyATBXKKe8MRIp0pwMfHDBmqy-piOIrrgwQzlUVo9VMpuE5myBc74R8LbqScM9hwnX5dg7svWuHXf6sqIVPCKOLfxiUgjgX56ntYvJu0-IVrCf3qk-zIzNyvOj6XkO5VXkFQwotCgKvJjobYm4YVIH3Snps3oOZNRmyrGjrTXzPgkH0X3w77OR_ejgGaHaUSrSD_Z_2ighWpykePrknuR-_-0F1NZEjJg&exp=2026-07-24T07:18:59.8321959Z"
+
 
 def _download(url: str, dest: Path) -> None:
     if not url:
@@ -26,16 +28,19 @@ def _download(url: str, dest: Path) -> None:
     tmp.replace(dest)
     print(f"[bnb-bootstrap] saved {dest} ({dest.stat().st_size} bytes)")
 
+
 def bootstrap():
     ckpt_url = os.environ.get("BOOTSTRAP_CKPT_URL", DEFAULT_CKPT)
     lora_url = os.environ.get("BOOTSTRAP_LORA_URL", DEFAULT_LORA)
     try:
         _download(ckpt_url, CKPT)
         _download(lora_url, LORA)
+        print("[bnb-bootstrap] done")
     except Exception as e:
         print(f"[bnb-bootstrap] ERROR: {e}")
 
-bootstrap()
+
+threading.Thread(target=bootstrap, name="bnb-bootstrap", daemon=True).start()
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
